@@ -1,0 +1,21 @@
+nginx:
+  build: images/nginx
+  command: nginx -g "daemon off;"
+  links:
+    - php
+  ports:
+    - "30:30"
+php:
+  build: images/php
+  volumes:
+    - ./images/php:/var/www/html
+  working_dir: /var/www/html/app/public
+  command: php-fpm
+  ports:
+    - "9000:9000"
+  environment:
+    APP_ENV: local
+    APP_DEBUG: 'true'
+    APP_KEY: IXbSrvcp55
+    APP_LOCALE: en
+    APP_FALLBACK_LOCALE: en
