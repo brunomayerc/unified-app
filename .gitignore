@@ -1,0 +1,5 @@
+.idea
+.history
+.git/
+.DS_Store
+images/php/app
