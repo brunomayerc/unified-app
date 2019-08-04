@@ -19,6 +19,9 @@ $router->group([ 'prefix' => 'api' ], function () use ( $router ) {
     $router->get( 'locations',  [ 'uses' => 'CraigsListController@getLocations' ] );
 
     // Retrieve all listings for a location
-    $router->get( 'listings[/{id}]',  [ 'uses' => 'CraigsListController@getAllListingsByLocation' ] );
+    $router->get( 'listings[/{location_id}]',  [ 'uses' => 'CraigsListController@getAllListingsByLocation' ] );
+
+    // Retrieves a listing's info
+    $router->get( 'info[/{listing_endpoint}]',  [ 'uses' => 'CraigsListController@getListingInfo' ] );
 
 });

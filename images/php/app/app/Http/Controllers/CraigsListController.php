@@ -38,28 +38,25 @@ class CraigsListController extends Controller
     /**
      * Retrieves 
      *
-     * @param [type] $id Id of the location
+     * @param int $location_id Id of the location
      * @return mixed Listings information or Error if listing was not found
      */
-    public function getAllListingsByLocation( $id = 0 ){
+    public function getAllListingsByLocation( $location_id = 0 ){
 
         // Check if id is valid and location exists
         $response = [];
-        if( \key_exists( $id, $this->locations ) ){
+        if( \key_exists( $location_id, $this->locations ) ){
 
             try {
-                
-                // Creates the listing based on the location info
-                $listing = new Listing( $id, $this->locations[ $id ] );
 
-                $response = $listing->getAll();
+                $response = Listing::getAll( $this->locations[ $location_id ]["url"] );
 
             } catch (\Exception $e) {
                 
                 // Something went wrong
                 $response = [
                     "error"     => true,
-                    "message"   => "Something went wrong when retrieving the listing: " . $e->getMessage()
+                    "message"   => "Something went wrong when retrieving the listings: " . $e->getMessage()
                 ];
 
             }
@@ -70,6 +67,45 @@ class CraigsListController extends Controller
             $response = [
                 "error"     => true,
                 "message"   => "Location not found. Please try again."
+            ];
+
+        }
+
+        return response()->json( $response );
+
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $listing_endpoint
+     * @return void
+     */
+    public function getListingInfo( $listing_endpoint ){
+
+        $response = [];
+        if( filter_var( urldecode( $listing_endpoint ), FILTER_VALIDATE_URL ) ){
+
+            try {
+
+                $response = Listing::getListingInfo( urldecode( $listing_endpoint ) );
+
+            } catch (\Exception $e) {
+                
+                // Something went wrong
+                $response = [
+                    "error"     => true,
+                    "message"   => "Something went wrong when retrieving the listing info: " . $e->getMessage()
+                ];
+
+            }
+
+        }else{
+            
+            // Location not found
+            $response = [
+                "error"     => true,
+                "message"   => "Listing info endpoint is invalid: " . urldecode( $listing_endpoint )
             ];
 
         }

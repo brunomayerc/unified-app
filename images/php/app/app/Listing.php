@@ -23,76 +23,27 @@ class Listing
     const CL_THUMBNAIL_ULR = "https://images.craigslist.org/%s_300x300.jpg";
     
     /**
-     * Location identifier
-     *
-     * @var int
-     */
-    private $location_id;
-
-    /**
-     * Location name
-     *
-     * @var int
-     */
-    private $location_name;
-
-    /**
-     * Location url endpoint where listings are retrieved from
-     *
-     * @var int
-     */
-    private $location_endpoint;
-
-    /**
-     * Location raw html retrieved from the CL endpoint into a DOM Tree
-     *
-     * @var PHPHtmlParser\Dom
-     */
-    private $location_rawHTMLDom;
-
-    /**
-     * Constructor
-     *
-     * @param int $id Location id
-     * @param array $location Array containing the location information
-     */
-    public function __construct( $id, $location )
-    {
-        try {
-
-            $this->location_id = $id;
-            $this->location_name = $location[ "name" ];
-            $this->location_endpoint = $location[ "url" ];
-    
-        } catch (\Exception $e) {
-
-            throw new \Exception("Listing location is invalid. Please try again.");
-
-        }
-
-    }
-
-    /**
      * Retrieves all listings 
      *
-     * @return array Listings information
+     * @param string $location_endpoint Location's listings url
+     * @return array All listings
      */
-    public function getAll(){
+    public static function getAll( $location_endpoint ){
 
         // Retrieves data from CL
-        $this->setLocation_rawHTMLDom();
+        $location_rawHTMLDom = self::getRawHTMLFromEndpoint( $location_endpoint );
 
         // Loop trough all the listings found
         $listings = [];
-        foreach ( $this->findListings() as $listing ) {
+        foreach ( self::findListings( $location_rawHTMLDom ) as $listing ) {
 
             $listings[] = [
-                "title"         => $this->getNodeInfo( $listing, ".result-title", "text" ),
-                "url"           => $this->getNodeInfo( $listing, ".result-title", "href" ),
-                "bedrooms"      => $this->getNodeInfo( $listing, ".housing", "text" ),
-                "cost"          => $this->getNodeInfo( $listing, ".result-price", "text" ),
-                "location"      => $this->getNodeInfo( $listing, ".result-hood", "text" ),
-                "thumbnails"    => $this->formatThumbnails( $this->getNodeInfo( $listing, ".result-image", "outerHtml" ) )
+                "title"         => self::getNodeInfo( $listing, ".result-title", "text" ),
+                "url"           => self::getNodeInfo( $listing, ".result-title", "href" ),
+                "bedrooms"      => self::getNodeInfo( $listing, ".housing", "text" ),
+                "cost"          => self::getNodeInfo( $listing, ".result-price", "text" ),
+                "location"      => self::getNodeInfo( $listing, ".result-hood", "text" ),
+                "thumbnails"    => self::formatThumbnails( self::getNodeInfo( $listing, ".result-image", "outerHtml" ) )
             ];
 
         }
@@ -100,7 +51,26 @@ class Listing
         return $listings;
 
     }
-    
+
+    /**
+     * Retrieves a listing information
+     *
+     * @param string $listing_endpoint Listing's info url
+     * @return array Listing's information
+     */
+    public static function getListingInfo( $listing_endpoint ) {
+
+        // Retrieves data from CL
+        $listing_rawHTMLDom = self::getRawHTMLFromEndpoint( $listing_endpoint );
+
+        return [
+            "bedrooms"      => self::getNodeInfo( $listing_rawHTMLDom, ".housing", "text" ),
+            "cost"          => self::getNodeInfo( $listing_rawHTMLDom, ".price", "text" ),
+            "location"      => self::getNodeInfo( $listing_rawHTMLDom, ".mapaddress", "text" ),
+            "thumbnail"     => self::getNodeInfo( $listing_rawHTMLDom, "img", "src" )
+        ];
+
+    }
 
     /**
      * Giving a node, finds the images information based on CL pattern
@@ -108,7 +78,7 @@ class Listing
      * @param mixed $node Node containing the images info
      * @return array Thumbnails urls
      */
-    private function formatThumbnails( $node ) {
+    private static function formatThumbnails( $node ) {
 
         $startDelimiter = "1:";
         $endDelimiter = ",";
@@ -135,17 +105,17 @@ class Listing
      * @param string $attr What attr from that node is being retrieved
      * @return string|bool Node info if found or false if not found
      */
-    private function getNodeInfo( $node, $selector, $attr ){
+    private static function getNodeInfo( $node, $selector, $attr ){
 
         $nodeInfo = false;
         $info = $node->find( $selector );
         if ( count( $info ) > 0 ) {
 
-            $nodeInfo = trim( $info[0]->{$attr} );
+            $nodeInfo = ltrim ( rtrim( trim ( $info[0]->{$attr} ) , "-" ) , "/" );
 
         }
 
-        return $nodeInfo;
+        return trim ( $nodeInfo );
 
     }
     
@@ -154,38 +124,37 @@ class Listing
      *
      * @return array listing nodes found on CL
      */
-    private function findListings(){
+    private static function findListings( $listing_dom ){
 
-        $listing_nodes = $this->location_rawHTMLDom;
         foreach ( self::CL_LISTING_TREE as $selector ) {
             
             // Check if the node exists
-            if ( empty( $listing_nodes ) ) {
+            if ( empty( $listing_dom ) ) {
 
                 throw new \Exception("Craigslist listing node tree is invalid: " . $selector);
 
             }
 
-            $listing_nodes = $listing_nodes->find( $selector );
+            $listing_dom = $listing_dom->find( $selector );
 
         }
 
-        return $listing_nodes;
+        return $listing_dom;
 
     }
 
 
     /**
-     * Retrieves the raw HTML from the location endpoint and transforms it into a DOM Object
+     * Retrieves the raw HTML from an endpoint and transforms it into a DOM Object
      *
      * @return void
      */
-    private function setLocation_rawHTMLDom(){
+    private static function getRawHTMLFromEndpoint( $endpoint ){
 
         try {
             
             $dom = new Dom();
-            $this->location_rawHTMLDom = $dom->loadFromUrl( $this->location_endpoint );    
+            return $dom->loadFromUrl( $endpoint );    
             
         } catch ( \Exception $e ) {
             
