@@ -18,9 +18,9 @@ class CraigsListController extends Controller
     {
         // Available locations
         $this->locations = [
-            "1" => [ "name" => "Portland, OR", "url" => "https://portland.craigslist.org/d/apts-housing-for-rent/search/apa" ],
-            "2" => [ "name" => "Miami, FL", "url" => "https://miami.craigslist.org/d/apts-housing-for-rent/search/apa" ],
-            "3" => [ "name" => "Las Vegas, NV", "url" => "https://lasvegas.craigslist.org/d/apts-housing-for-rent/search/apa" ],
+            [ "id" => "0", "name" => "Portland, OR", "url" => "https://portland.craigslist.org/d/apts-housing-for-rent/search/apa" ],
+            [ "id" => "1", "name" => "Miami, FL", "url" => "https://miami.craigslist.org/d/apts-housing-for-rent/search/apa" ],
+            [ "id" => "2", "name" => "Las Vegas, NV", "url" => "https://lasvegas.craigslist.org/d/apts-housing-for-rent/search/apa" ],
         ];
     }
 
