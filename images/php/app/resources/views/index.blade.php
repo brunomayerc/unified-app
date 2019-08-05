@@ -51,6 +51,10 @@
             #listings img {
                 max-width: 150px;
             }
+            th.sortable {
+                cursor: pointer;
+                color: #0000FF;
+            }
         </style>
 
         <!-- Small custom js -->
@@ -134,6 +138,45 @@
 
                 }
 
+                /**
+                 * Simple sorting algorithm for strings
+                 */
+                const sortTable = (column, sortType) => {
+                    var table, rows, switching, i, x, y, shouldSwitch;
+                    table = document.getElementById("table");
+                    switching = true;
+                    while (switching) {
+                        switching = false;
+                        rows = table.rows;
+                        for (i = 1; i < (rows.length - 1); i++) {
+                        shouldSwitch = false;
+                        x = rows[i].getElementsByTagName("TD")[column].innerHTML.toLowerCase();
+                        y = rows[i + 1].getElementsByTagName("TD")[column].innerHTML.toLowerCase();
+                        if(sortType === 'number'){
+                            x = parseFloat(x.replace( /^\D+/g, ''));
+                            y = parseFloat(y.replace( /^\D+/g, ''));
+                        }
+                        if (x > y) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                        }
+                        if (shouldSwitch) {
+                        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                        switching = true;
+                        }
+                    }
+                }
+                
+                /**
+                 * Binds the click event to the sortable column headers
+                 */
+                document.querySelectorAll("th.sortable").forEach((column, index) => {
+                    column.addEventListener("click", () => {
+                        sortTable(index + 1, column.dataset.sortType);
+                    });
+                });
+
                 // Loads the locations into the select
                 loadLocations();
 
@@ -168,13 +211,13 @@
         </div>
         <div class="pure-g">
             <div class="pure-u-1-1">
-                <table  class="pure-table pure-table-horizontal">
+                <table id="table" class="pure-table pure-table-horizontal">
                     <thead>
                         <tr>
                             <th></th>
-                            <th>Title</th>
-                            <th>Bedrooms</th>
-                            <th>Cost</th>
+                            <th class="sortable" data-sort-type="string">Title</th>
+                            <th class="sortable" data-sort-type="string">Bedrooms</th>
+                            <th class="sortable" data-sort-type="number">Cost</th>
                             <th>Location</th>
                             <th>View</th>
                         </tr>
